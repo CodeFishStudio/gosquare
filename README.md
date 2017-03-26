@@ -1,2 +1,1 @@
-"# gokounta" 
 "# gosquare" 
