@@ -2,6 +2,14 @@ package gosquare
 
 import "time"
 
+// TokenRequest is the response for requesting a token
+type TokenRequest struct {
+	ClientID     string `json:"client_id"`
+	ClientSecret string `json:"client_secret"`
+	Code         string `json:"code"`
+	AccessToken  string `json:"access_toke"`
+}
+
 // TokenResponse is the response for requesting a token
 type TokenResponse struct {
 	AccessToken string    `json:"access_token"`
@@ -12,7 +20,8 @@ type TokenResponse struct {
 
 //WebHookRequest is the request structs for creating a webhook
 type WebHookRequest struct {
-	Topic   string `json:"topic"`
-	Address string `json:"address"`
-	Format  string `json:"format"`
+	MerchantID string   `json:"merchant_id"`
+	LocationID string   `json:"location_id"`
+	EventTypes []string `json:"event_type"`
+	//	EntityID   string   `json:"entity_id"`
 }

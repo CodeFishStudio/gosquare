@@ -12,9 +12,11 @@ import (
 )
 
 const (
-	baseURL    = "https://connect.squareup.com"
-	tokenURL   = "oauth2/token"
-	refreshURL = "oauth2/clients/%v/access-token/renew"
+	baseURL     = "https://connect.squareup.com"
+	tokenURL    = "oauth2/token"
+	refreshURL  = "oauth2/clients/%v/access-token/renew"
+	webhookURL  = "v1/%v/webhooks"
+	locationURL = "/v1/me/locations"
 )
 
 var (
@@ -42,10 +44,11 @@ func NewClient(code string, clientID string, clientSecret string) *Square {
 // AccessToken will get a new access token
 func (v *Square) AccessToken() (string, string, time.Time, error) {
 
-	data := url.Values{}
-	data.Set("code", v.StoreCode)
-	data.Add("client_secret", v.ClientSecret)
-	data.Add("client_id", v.ClientID)
+	data := TokenRequest{
+		ClientID:     v.ClientID,
+		ClientSecret: v.ClientSecret,
+		Code:         v.StoreCode,
+	}
 
 	u, _ := url.ParseRequestURI(baseURL)
 	u.Path = tokenURL
@@ -53,11 +56,17 @@ func (v *Square) AccessToken() (string, string, time.Time, error) {
 
 	fmt.Printf("AccessToken %v %v\n", urlStr, data)
 
-	client := &http.Client{}
-	r, _ := http.NewRequest("POST", urlStr, bytes.NewBufferString(data.Encode()))
+	request, _ := json.Marshal(data)
 
-	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+	fmt.Printf("AccessToken Request %v \n", string(request))
+
+	client := &http.Client{}
+	r, _ := http.NewRequest("POST", urlStr, bytes.NewBuffer(request))
+
+	r.Header.Add("Content-Type", "application/json")
+	r.Header.Add("Accept", "application/json")
+	r.Header.Add("Content-Length", strconv.Itoa(len(request)))
+	r.Header.Add("Authorization", "Client "+data.ClientSecret)
 
 	res, _ := client.Do(r)
 	fmt.Println(res.Status)
@@ -102,8 +111,10 @@ func (v *Square) RefreshToken(refreshtoken string) (string, string, time.Time, e
 		return "", "", time.Now(), err
 	}
 
+	r.Header.Add("Accept", "application/json")
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+	r.Header.Add("Authorization", "Client "+v.ClientSecret)
 
 	res, _ := client.Do(r)
 	fmt.Println(res.Status)
@@ -129,4 +140,75 @@ func (v *Square) RefreshToken(refreshtoken string) (string, string, time.Time, e
 	}
 
 	return "", "", time.Now(), fmt.Errorf("Error requesting access token")
+}
+
+// UpdateWebHook will init the sales hook for the Square store
+func (v *Square) UpdateWebHook(token string, company string, paymentUpdated bool, inventoryUpdated bool, timeCardUpdated bool) error {
+
+	fmt.Println("UpdateWebHook", token, company)
+
+	whRequest := WebHookRequest{}
+
+	if paymentUpdated {
+		whRequest.EventTypes = append(whRequest.EventTypes, "PAYMENT_UPDATED")
+	}
+
+	if inventoryUpdated {
+		whRequest.EventTypes = append(whRequest.EventTypes, "INVENTORY_UPDATED")
+	}
+
+	if timeCardUpdated {
+		whRequest.EventTypes = append(whRequest.EventTypes, "TIMECARD_UPDATED")
+	}
+
+	u, err := url.ParseRequestURI(baseURL)
+	if err != nil {
+		return err
+	}
+
+	u.Path = fmt.Sprintf(webhookURL, company)
+
+	return nil
+}
+
+// GetLocations will return the categories of the authenticated token
+func (v *Square) GetLocations(token string) (Locations, error) {
+	client := &http.Client{}
+
+	u, _ := url.ParseRequestURI(baseURL)
+	u.Path = locationURL
+	urlStr := fmt.Sprintf("%v", u)
+
+	r, err := http.NewRequest("GET", urlStr, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	r.Header.Add("Accept", "application/json")
+	r.Header.Add("Authorization", "Bearer "+token) //v.ClientSecret)
+
+	res, err := client.Do(r)
+	if err != nil {
+		return nil, err
+	}
+
+	rawResBody, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println("GetLocations Body", string(rawResBody))
+
+	if res.StatusCode == 200 {
+		var resp Locations
+
+		err = json.Unmarshal(rawResBody, &resp)
+
+		if err != nil {
+			return nil, err
+		}
+		return resp, nil
+	}
+	return nil, fmt.Errorf("Failed to get Square Locations %s", res.Status)
+
 }
