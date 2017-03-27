@@ -12,11 +12,12 @@ import (
 )
 
 const (
-	baseURL     = "https://connect.squareup.com"
-	tokenURL    = "oauth2/token"
-	refreshURL  = "oauth2/clients/%v/access-token/renew"
-	webhookURL  = "v1/%v/webhooks"
-	locationURL = "/v1/me/locations"
+	baseURL    = "https://connect.squareup.com"
+	tokenURL   = "oauth2/token"
+	refreshURL = "oauth2/clients/%v/access-token/renew"
+	webhookURL = "/v1/%v/webhooks"
+	//webhookURL  = "v1/me/webhooks"
+	locationURL = "v1/me/locations"
 )
 
 var (
@@ -170,12 +171,13 @@ func (v *Square) UpdateWebHook(token string, company string, location string, pa
 	fmt.Println("URL", urlStr)
 
 	client := &http.Client{}
-	r, err := http.NewRequest("POST", urlStr, bytes.NewBufferString(body))
+	r, err := http.NewRequest("PUT", urlStr, bytes.NewBufferString(body))
 	if err != nil {
 		return err
 	}
 
 	r.Header.Add("Accept", "application/json")
+	r.Header.Add("Content-Type", "application/json")
 	r.Header.Add("Authorization", "Bearer "+token)
 
 	res, _ := client.Do(r)
