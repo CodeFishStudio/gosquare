@@ -17,11 +17,3 @@ type TokenResponse struct {
 	ExpiresAt   time.Time `json:"expires_at"`
 	MerchantID  string    `json:"merchant_id"`
 }
-
-//WebHookRequest is the request structs for creating a webhook
-type WebHookRequest struct {
-	MerchantID string   `json:"merchant_id"`
-	LocationID string   `json:"location_id"`
-	EventTypes []string `json:"event_type"`
-	//	EntityID   string   `json:"entity_id"`
-}

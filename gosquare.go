@@ -143,30 +143,50 @@ func (v *Square) RefreshToken(refreshtoken string) (string, string, time.Time, e
 }
 
 // UpdateWebHook will init the sales hook for the Square store
-func (v *Square) UpdateWebHook(token string, company string, paymentUpdated bool, inventoryUpdated bool, timeCardUpdated bool) error {
+func (v *Square) UpdateWebHook(token string, company string, location string, paymentUpdated bool) error {
 
-	fmt.Println("UpdateWebHook", token, company)
+	fmt.Println("UpdateWebHook", token, company, location)
 
-	whRequest := WebHookRequest{}
+	//"PAYMENT_UPDATED"
+	//"INVENTORY_UPDATED"
+	//TIMECARD_UPDATED
+
+	var body string
 
 	if paymentUpdated {
-		whRequest.EventTypes = append(whRequest.EventTypes, "PAYMENT_UPDATED")
+		body = strconv.Quote("PAYMENT_UPDATED")
 	}
 
-	if inventoryUpdated {
-		whRequest.EventTypes = append(whRequest.EventTypes, "INVENTORY_UPDATED")
-	}
-
-	if timeCardUpdated {
-		whRequest.EventTypes = append(whRequest.EventTypes, "TIMECARD_UPDATED")
-	}
+	body = "[" + body + "]"
 
 	u, err := url.ParseRequestURI(baseURL)
 	if err != nil {
 		return err
 	}
 
-	u.Path = fmt.Sprintf(webhookURL, company)
+	u.Path = fmt.Sprintf(webhookURL, location)
+	urlStr := fmt.Sprintf("%v", u)
+
+	fmt.Println("URL", urlStr)
+
+	client := &http.Client{}
+	r, err := http.NewRequest("POST", urlStr, bytes.NewBufferString(body))
+	if err != nil {
+		return err
+	}
+
+	r.Header.Add("Accept", "application/json")
+	r.Header.Add("Authorization", "Bearer "+token)
+
+	res, _ := client.Do(r)
+	fmt.Println(res.Status)
+
+	rawResBody, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("BODY", string(rawResBody))
 
 	return nil
 }
