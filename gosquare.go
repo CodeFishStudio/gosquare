@@ -16,6 +16,7 @@ const (
 	tokenURL   = "oauth2/token"
 	refreshURL = "oauth2/clients/%v/access-token/renew"
 	webhookURL = "/v1/%v/webhooks"
+	paymentURL = "/v1/%v/payments/%v"
 	//webhookURL  = "v1/me/webhooks"
 	locationURL = "v1/me/locations"
 )
@@ -232,5 +233,47 @@ func (v *Square) GetLocations(token string) (Locations, error) {
 		return resp, nil
 	}
 	return nil, fmt.Errorf("Failed to get Square Locations %s", res.Status)
+
+}
+
+// GetPayment will return the categories of the authenticated token
+func (v *Square) GetPayment(token string, locationID string, paymentID string) (*Payment, error) {
+	client := &http.Client{}
+
+	u, _ := url.ParseRequestURI(baseURL)
+	u.Path = fmt.Sprintf(paymentURL, locationID, paymentID)
+	urlStr := fmt.Sprintf("%v", u)
+
+	r, err := http.NewRequest("GET", urlStr, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	r.Header.Add("Accept", "application/json")
+	r.Header.Add("Authorization", "Bearer "+token) //v.ClientSecret)
+
+	res, err := client.Do(r)
+	if err != nil {
+		return nil, err
+	}
+
+	rawResBody, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	//fmt.Println("GetPayment Body", string(rawResBody))
+
+	if res.StatusCode == 200 {
+		resp := Payment{}
+
+		err = json.Unmarshal(rawResBody, &resp)
+
+		if err != nil {
+			return nil, err
+		}
+		return &resp, nil
+	}
+	return nil, fmt.Errorf("Failed to get Square Payment %s", res.Status)
 
 }
