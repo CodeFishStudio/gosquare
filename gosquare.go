@@ -12,12 +12,11 @@ import (
 )
 
 const (
-	baseURL    = "https://connect.squareup.com"
-	tokenURL   = "oauth2/token"
-	refreshURL = "oauth2/clients/%v/access-token/renew"
-	webhookURL = "/v1/%v/webhooks"
-	paymentURL = "/v1/%v/payments/%v"
-	//webhookURL  = "v1/me/webhooks"
+	baseURL     = "https://connect.squareup.com"
+	tokenURL    = "oauth2/token"
+	refreshURL  = "oauth2/clients/%v/access-token/renew"
+	webhookURL  = "/v1/%v/webhooks"
+	paymentURL  = "/v1/%v/payments/%v"
 	locationURL = "v1/me/locations"
 )
 
@@ -56,11 +55,7 @@ func (v *Square) AccessToken() (string, string, time.Time, error) {
 	u.Path = tokenURL
 	urlStr := fmt.Sprintf("%v", u)
 
-	fmt.Printf("AccessToken %v %v\n", urlStr, data)
-
 	request, _ := json.Marshal(data)
-
-	fmt.Printf("AccessToken Request %v \n", string(request))
 
 	client := &http.Client{}
 	r, _ := http.NewRequest("POST", urlStr, bytes.NewBuffer(request))
@@ -71,7 +66,6 @@ func (v *Square) AccessToken() (string, string, time.Time, error) {
 	r.Header.Add("Authorization", "Client "+data.ClientSecret)
 
 	res, _ := client.Do(r)
-	fmt.Println(res.Status)
 
 	rawResBody, err := ioutil.ReadAll(res.Body)
 
@@ -152,7 +146,6 @@ func (v *Square) UpdateWebHook(token string, company string, location string, pa
 	//"PAYMENT_UPDATED"
 	//"INVENTORY_UPDATED"
 	//TIMECARD_UPDATED
-
 	var body string
 
 	if paymentUpdated {
@@ -182,14 +175,11 @@ func (v *Square) UpdateWebHook(token string, company string, location string, pa
 	r.Header.Add("Authorization", "Bearer "+token)
 
 	res, _ := client.Do(r)
-	fmt.Println(res.Status)
 
-	rawResBody, err := ioutil.ReadAll(res.Body)
+	_, err = ioutil.ReadAll(res.Body)
 	if err != nil {
 		return err
 	}
-
-	fmt.Println("BODY", string(rawResBody))
 
 	return nil
 }
@@ -208,7 +198,7 @@ func (v *Square) GetLocations(token string) (Locations, error) {
 	}
 
 	r.Header.Add("Accept", "application/json")
-	r.Header.Add("Authorization", "Bearer "+token) //v.ClientSecret)
+	r.Header.Add("Authorization", "Bearer "+token)
 
 	res, err := client.Do(r)
 	if err != nil {
@@ -219,8 +209,6 @@ func (v *Square) GetLocations(token string) (Locations, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Println("GetLocations Body", string(rawResBody))
 
 	if res.StatusCode == 200 {
 		var resp Locations
@@ -236,7 +224,7 @@ func (v *Square) GetLocations(token string) (Locations, error) {
 
 }
 
-// GetPayment will return the categories of the authenticated token
+// GetPayment will return the details of the payment
 func (v *Square) GetPayment(token string, locationID string, paymentID string) (*Payment, error) {
 	client := &http.Client{}
 
@@ -250,7 +238,7 @@ func (v *Square) GetPayment(token string, locationID string, paymentID string) (
 	}
 
 	r.Header.Add("Accept", "application/json")
-	r.Header.Add("Authorization", "Bearer "+token) //v.ClientSecret)
+	r.Header.Add("Authorization", "Bearer "+token)
 
 	res, err := client.Do(r)
 	if err != nil {
@@ -261,8 +249,6 @@ func (v *Square) GetPayment(token string, locationID string, paymentID string) (
 	if err != nil {
 		return nil, err
 	}
-
-	//fmt.Println("GetPayment Body", string(rawResBody))
 
 	if res.StatusCode == 200 {
 		resp := Payment{}
