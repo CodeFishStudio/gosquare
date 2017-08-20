@@ -10,6 +10,7 @@ type Payment struct {
 	InclusiveTax   PaymentAmount `json:"inclusive_tax_money,omitempty"`
 	NetTotal       PaymentAmount `json:"net_total_money,omitempty"`
 	DiscountAmount PaymentAmount `json:"discount_money,omitempty"`
+	RefundAmount   PaymentAmount `json:"refunded_money,omitempty"`
 }
 
 //PaymentAmount is the struct for a an amount with a Square Payment
