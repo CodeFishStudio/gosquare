@@ -69,8 +69,6 @@ func (v *Square) AccessToken() (string, string, time.Time, error) {
 
 	rawResBody, err := ioutil.ReadAll(res.Body)
 
-	fmt.Printf("AccessToken Body %v \n", string(rawResBody))
-
 	if err != nil {
 		return "", "", time.Now(), fmt.Errorf("%v", string(rawResBody))
 	}
@@ -113,14 +111,11 @@ func (v *Square) RefreshToken(refreshtoken string) (string, string, time.Time, e
 	r.Header.Add("Authorization", "Client "+v.ClientSecret)
 
 	res, _ := client.Do(r)
-	fmt.Println(res.Status)
 
 	rawResBody, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return "", "", time.Now(), err
 	}
-
-	fmt.Println("BODY", string(rawResBody))
 
 	if res.StatusCode >= 400 {
 		return "", "", time.Now(), fmt.Errorf("Failed to get refresh token: %s", res.Status)
@@ -140,9 +135,6 @@ func (v *Square) RefreshToken(refreshtoken string) (string, string, time.Time, e
 
 // UpdateWebHook will init the sales hook for the Square store
 func (v *Square) UpdateWebHook(token string, company string, location string, paymentUpdated bool) error {
-
-	fmt.Println("UpdateWebHook", token, company, location)
-
 	//"PAYMENT_UPDATED"
 	//"INVENTORY_UPDATED"
 	//TIMECARD_UPDATED
@@ -161,8 +153,6 @@ func (v *Square) UpdateWebHook(token string, company string, location string, pa
 
 	u.Path = fmt.Sprintf(webhookURL, location)
 	urlStr := fmt.Sprintf("%v", u)
-
-	fmt.Println("URL", urlStr)
 
 	client := &http.Client{}
 	r, err := http.NewRequest("PUT", urlStr, bytes.NewBufferString(body))
