@@ -12,12 +12,13 @@ import (
 )
 
 const (
-	baseURL     = "https://connect.squareup.com"
-	tokenURL    = "oauth2/token"
-	refreshURL  = "oauth2/clients/%v/access-token/renew"
-	webhookURL  = "/v1/%v/webhooks"
-	paymentURL  = "/v1/%v/payments/%v"
-	locationURL = "v1/me/locations"
+	baseURL        = "https://connect.squareup.com"
+	tokenURL       = "oauth2/token"
+	refreshURL     = "oauth2/clients/%v/access-token/renew"
+	webhookURL     = "/v1/%v/webhooks"
+	paymentURL     = "/v1/%v/payments"
+	paymentByIDURL = "/v1/%v/payments/%v"
+	locationURL    = "v1/me/locations"
 )
 
 var (
@@ -219,7 +220,7 @@ func (v *Square) GetPayment(token string, locationID string, paymentID string) (
 	client := &http.Client{}
 
 	u, _ := url.ParseRequestURI(baseURL)
-	u.Path = fmt.Sprintf(paymentURL, locationID, paymentID)
+	u.Path = fmt.Sprintf(paymentByIDURL, locationID, paymentID)
 	urlStr := fmt.Sprintf("%v", u)
 
 	r, err := http.NewRequest("GET", urlStr, nil)
@@ -249,6 +250,49 @@ func (v *Square) GetPayment(token string, locationID string, paymentID string) (
 			return nil, err
 		}
 		return &resp, nil
+	}
+	return nil, fmt.Errorf("Failed to get Square Payment %s", res.Status)
+
+}
+
+// GetPayments will return the details of the payment
+func (v *Square) GetPayments(token string, locationID string, start string, end string) ([]Payment, error) {
+	client := &http.Client{}
+
+	u, _ := url.ParseRequestURI(baseURL)
+	u.Path = fmt.Sprintf(paymentURL, locationID)
+	urlStr := fmt.Sprintf("%v", u)
+
+	urlStr = urlStr + fmt.Sprintf("?begin_time=%v&end_time=%v", start, end)
+	fmt.Println(urlStr)
+
+	r, err := http.NewRequest("GET", urlStr, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	r.Header.Add("Accept", "application/json")
+	r.Header.Add("Authorization", "Bearer "+token)
+
+	res, err := client.Do(r)
+	if err != nil {
+		return nil, err
+	}
+
+	rawResBody, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if res.StatusCode == 200 {
+		var resp []Payment
+
+		err = json.Unmarshal(rawResBody, &resp)
+
+		if err != nil {
+			return nil, err
+		}
+		return resp, nil
 	}
 	return nil, fmt.Errorf("Failed to get Square Payment %s", res.Status)
 
