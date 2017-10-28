@@ -241,7 +241,7 @@ func (v *Square) GetPayment(token string, locationID string, paymentID string) (
 		return nil, err
 	}
 
-	//fmt.Println(string(rawResBody))
+	//	fmt.Println(string(rawResBody))
 
 	if res.StatusCode == 200 {
 		resp := Payment{}
@@ -265,7 +265,7 @@ func (v *Square) GetPayments(token string, locationID string, start string, end 
 	u.Path = fmt.Sprintf(paymentURL, locationID)
 	urlStr := fmt.Sprintf("%v", u)
 
-	urlStr = urlStr + "?order=DESC"
+	urlStr = urlStr + "?order=DESC&limit=200"
 	if start != "" {
 		urlStr = urlStr + fmt.Sprintf("&begin_time=%v&end_time=%v", start, end)
 	}
