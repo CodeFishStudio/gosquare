@@ -7,7 +7,7 @@ type TokenRequest struct {
 	ClientID     string `json:"client_id"`
 	ClientSecret string `json:"client_secret"`
 	Code         string `json:"code"`
-	AccessToken  string `json:"access_toke"`
+	AccessToken  string `json:"access_token"`
 }
 
 // TokenResponse is the response for requesting a token
