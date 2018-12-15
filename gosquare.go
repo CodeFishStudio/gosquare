@@ -269,6 +269,8 @@ func (v *Square) GetPayments(token string, locationID string, start string, end 
 	if start != "" {
 		urlStr = urlStr + fmt.Sprintf("&begin_time=%v&end_time=%v", start, end)
 	}
+
+	//urlStr = "https://connect.squareup.com/v1/V0CKA1WZJP1W0/payments?batch_token=Ti1kg6T7YQ63F7YcVoNJdkjPvrJtZt0B5Vi8HU1OoS8Oi51DCvGX0DxDeep69A5P1jCvo7vJYQ9Q3imPmQ4ojGusiQiAf0Mg8gTLK5xmUdrzkW5lyaJ0U1ppb4HaJL6a9Wu8uK&begin_time=2017-12-13T21%3A43%3A16.364795388Z&end_time=2018-12-13T21%3A43%3A16.364795388Z&limit=200&order=DESC"
 	fmt.Println(urlStr)
 
 	r, err := http.NewRequest("GET", urlStr, nil)
@@ -291,6 +293,8 @@ func (v *Square) GetPayments(token string, locationID string, start string, end 
 
 	if res.StatusCode == 200 {
 		var resp []Payment
+
+		fmt.Println(res.Header["Link"])
 
 		err = json.Unmarshal(rawResBody, &resp)
 
