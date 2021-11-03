@@ -45,11 +45,12 @@ func NewClient(code string, clientID string, clientSecret string) *Square {
 
 // AccessToken will get a new access token
 func (v *Square) AccessToken() (string, string, time.Time, error) {
-
+	
 	data := TokenRequest{
 		ClientID:     v.ClientID,
 		ClientSecret: v.ClientSecret,
 		Code:         v.StoreCode,
+		GrantType:    "authorization_code",
 	}
 
 	u, _ := url.ParseRequestURI(baseURL)
