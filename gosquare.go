@@ -202,14 +202,14 @@ func (v *Square) GetLocations(token string) (Locations, error) {
 	}
 
 	if res.StatusCode == 200 {
-		var resp Locations
+		var resp LocationList
 
 		err = json.Unmarshal(rawResBody, &resp)
 
 		if err != nil {
 			return nil, err
 		}
-		return resp, nil
+		return resp.Locations, nil
 	}
 	return nil, fmt.Errorf("Failed to get Square Locations %s", res.Status)
 

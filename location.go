@@ -10,3 +10,7 @@ type Location struct {
 
 //Locations defines a list of Location
 type Locations []Location
+
+type LocationList struct {
+	Locations	Locations `json:"locations"`
+}
