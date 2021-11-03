@@ -4,8 +4,7 @@ package gosquare
 type Location struct {
 	ID           string `json:"id"`
 	Name         string `json:"name"`
-	Email        string `json:"emai"`
-	CountryCode  string `json:"country_code"`
+	CountryCode  string `json:"country"`
 	BusinessName string `json:"business_name"`
 }
 
