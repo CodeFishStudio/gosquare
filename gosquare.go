@@ -18,7 +18,7 @@ const (
 	webhookURL     = "/v1/%v/webhooks"
 	paymentURL     = "/v1/%v/payments"
 	paymentByIDURL = "/v1/%v/payments/%v"
-	locationURL    = "v1/me/locations"
+	locationURL    = "v2/locations"
 )
 
 var (
