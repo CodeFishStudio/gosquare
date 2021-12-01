@@ -14,7 +14,7 @@ import (
 const (
 	baseURL        = "https://connect.squareup.com"
 	tokenURL       = "oauth2/token"
-	refreshURL     = "oauth2/clients/%v/access-token/renew"
+	//refreshURL     = "oauth2/clients/%v/access-token/renew"
 	webhookURL     = "/v1/%v/webhooks"
 	paymentURL     = "/v1/%v/payments"
 	paymentByIDURL = "/v1/%v/payments/%v"
@@ -44,8 +44,8 @@ func NewClient(code string, clientID string, clientSecret string) *Square {
 }
 
 // AccessToken will get a new access token
-func (v *Square) AccessToken() (string, string, time.Time, error) {
-	
+func (v *Square) AccessToken() (string, string, string, time.Time, error) {
+
 	data := TokenRequest{
 		ClientID:     v.ClientID,
 		ClientSecret: v.ClientSecret,
@@ -72,67 +72,68 @@ func (v *Square) AccessToken() (string, string, time.Time, error) {
 	rawResBody, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
-		return "", "", time.Now(), fmt.Errorf("%v", string(rawResBody))
+		return "", "", "", time.Now(), fmt.Errorf("%v", string(rawResBody))
 	}
 
 	if res.StatusCode == 200 {
 		resp := &TokenResponse{}
 		if err := json.Unmarshal(rawResBody, resp); err != nil {
-			return "", "", time.Now(), err
+			return "", "", "", time.Now(), err
 		}
 
-		return resp.AccessToken, resp.MerchantID, resp.ExpiresAt, nil
+		return resp.AccessToken, resp.RefreshToken, resp.MerchantID, resp.ExpiresAt, nil
 	}
 
-	return "", "", time.Now(), fmt.Errorf("Failed to get access token: %s", res.Status)
+	return "", "", "", time.Now(), fmt.Errorf("Failed to get access token: %s", res.Status)
 }
 
 // RefreshToken will get a new refresh token
-func (v *Square) RefreshToken(refreshtoken string) (string, string, time.Time, error) {
+func (v *Square) RefreshToken(refreshToken string) (string, string, string, time.Time, error) {
 
-	data := url.Values{}
-	data.Set("access_token", refreshtoken)
+	data := TokenRequest{
+		ClientID:     v.ClientID,
+		ClientSecret: v.ClientSecret,
+		RefreshToken: refreshToken,
+		GrantType:    "refresh_token",
+	}
 
 	u, err := url.ParseRequestURI(baseURL)
 	if err != nil {
-		return "", "", time.Now(), err
+		return "", "", "", time.Now(), err
 	}
-
-	u.Path = fmt.Sprintf(refreshURL, v.ClientID)
+	u.Path = tokenURL
 	urlStr := fmt.Sprintf("%v", u)
 
+	request, _ := json.Marshal(data)
+
 	client := &http.Client{}
-	r, err := http.NewRequest("POST", urlStr, bytes.NewBufferString(data.Encode()))
+	r, err := http.NewRequest("POST", urlStr, bytes.NewBuffer(request))
 	if err != nil {
-		return "", "", time.Now(), err
+		return "", "", "", time.Now(), err
 	}
 
 	r.Header.Add("Accept", "application/json")
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+	r.Header.Add("Content-Length", strconv.Itoa(len(request)))
 	r.Header.Add("Authorization", "Client "+v.ClientSecret)
 
 	res, _ := client.Do(r)
 
 	rawResBody, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return "", "", time.Now(), err
-	}
-
-	if res.StatusCode >= 400 {
-		return "", "", time.Now(), fmt.Errorf("Failed to get refresh token: %s", res.Status)
+		return "", "", "", time.Now(), fmt.Errorf("%v", string(rawResBody))
 	}
 
 	if res.StatusCode == 200 {
 		resp := &TokenResponse{}
 		if err := json.Unmarshal(rawResBody, resp); err != nil {
-			return "", "", time.Now(), err
+			return "", "", "", time.Now(), err
 		}
 
-		return resp.AccessToken, resp.MerchantID, resp.ExpiresAt, nil
+		return resp.AccessToken, resp.RefreshToken, resp.MerchantID, resp.ExpiresAt, nil
 	}
 
-	return "", "", time.Now(), fmt.Errorf("Error requesting access token")
+	return "", "", "", time.Now(), fmt.Errorf("Error requesting access token")
 }
 
 // UpdateWebHook will init the sales hook for the Square store
