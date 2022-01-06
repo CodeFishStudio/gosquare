@@ -113,9 +113,8 @@ func (v *Square) RefreshToken(refreshToken string) (string, string, string, time
 	}
 
 	r.Header.Add("Accept", "application/json")
-	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	r.Header.Add("Content-Type", "application/json")
 	r.Header.Add("Content-Length", strconv.Itoa(len(request)))
-	r.Header.Add("Authorization", "Client "+v.ClientSecret)
 
 	res, _ := client.Do(r)
 
@@ -133,7 +132,11 @@ func (v *Square) RefreshToken(refreshToken string) (string, string, string, time
 		return resp.AccessToken, resp.RefreshToken, resp.MerchantID, resp.ExpiresAt, nil
 	}
 
-	return "", "", "", time.Now(), fmt.Errorf("Error requesting access token")
+	resp := &ErrorResponse{}
+	if err := json.Unmarshal(rawResBody, resp); err != nil {
+		return "", "", "", time.Now(), fmt.Errorf("Error requesting access token: %v", err)
+	}
+	return "", "", "", time.Now(), fmt.Errorf("Error requesting access token: %v", resp.Message)
 }
 
 // UpdateWebHook will init the sales hook for the Square store
