@@ -19,3 +19,9 @@ type TokenResponse struct {
 	MerchantID  string    `json:"merchant_id"`
 	RefreshToken string   `json:"refresh_token"`
 }
+
+// ErrorResponse is the error response for requesting a token
+type ErrorResponse struct {
+	Message string    `json:"message"`
+	Type   string    `json:"type"`
+}
